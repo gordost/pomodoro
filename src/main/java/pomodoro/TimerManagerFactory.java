@@ -62,8 +62,8 @@ public final class TimerManagerFactory {
 
         @Override
         public Builder executionScheme(final int... executionScheme) {
-            for (int i = 0; i < executionScheme.length; i++) {
-                if (executionScheme[i] < 0) {
+            for (int anExecutionScheme : executionScheme) {
+                if (anExecutionScheme < 0) {
                     throw new IllegalArgumentException("No negative values allowed.");
                 }
             }
@@ -271,7 +271,6 @@ public final class TimerManagerFactory {
             notifierExecutor.shutdownNow();
             if (!awaitFullTermination(notifierExecutor)) {
                 Thread.currentThread().interrupt();
-                return;
             }
         }
 
@@ -317,9 +316,6 @@ public final class TimerManagerFactory {
             private volatile int pomodoroCount = 0;
             private volatile boolean suspended = false;
             private volatile boolean stopped = false;
-
-
-            private final Object lock = new Object();
 
             private TimerImpl(
                     final String name,
@@ -407,8 +403,7 @@ public final class TimerManagerFactory {
 
             @Override
             public void run() {
-                final long startpoint = System.currentTimeMillis();
-                long checkpoint = startpoint;
+                long checkpoint = System.currentTimeMillis();
                 long accumulated = 0;
                 int lastTickSent = 0;
                 for (int i = 0; i < executionScheme.length; i++) {

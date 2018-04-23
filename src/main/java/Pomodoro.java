@@ -1,13 +1,17 @@
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
+
 import pomodoro.Timer;
 import pomodoro.Timer.Status;
 import pomodoro.TimerManager;
@@ -22,13 +26,16 @@ public final class Pomodoro {
 
     public static void main(String[] args) {
         final boolean ansi;
+        final boolean forceBell;
         try {
-            ansi = isAnsiRequested(args);
+            final Map<String, Boolean> flags = parseArgs(args);
+            ansi = flags.get("ansi");
+            forceBell = flags.get("bell");
         } catch (final IllegalArgumentException e) {
             System.err.println("Illegal argument. Try: java Main [-ansi]");
             return;
         }
-
+        
         final boolean isConsole = (System.console() != null);
         final Consumer<String> promptPrinter = (prompt) -> {
             if (!isConsole) {
@@ -94,7 +101,7 @@ public final class Pomodoro {
         });
 
         final Clip clip = getPingSoundClip();
-        if (isConsole && clip != null) {
+        if ((isConsole || forceBell) && clip != null) {
             builder.add(new TimerManager.Listener() {
                 @Override
                 public void onActivityEnded(final Timer timer, final int pomodoroCount) {
@@ -125,19 +132,15 @@ public final class Pomodoro {
         });
 
         final TimerManager manager = builder.timeUnit(TimeUnit.SECONDS).build();
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                if (clip != null) clip.close();
-                manager.shutdown();
-            }
-        });
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (clip != null) clip.close();
+            manager.shutdown();
+        }));
 
         promptPrinter.accept("Welcome to Pomodoro. Type 'help' for help.\n");
         promptPrinter.accept(COMMAND_PROMPT);
 
-        final Scanner scanner = new Scanner(System.in);
-        try {
+        try (Scanner scanner = new Scanner(System.in)) {
             while (scanner.hasNextLine()) {
                 try {
                     if (!parseAndExecute(scanner.nextLine(), manager)) {
@@ -148,8 +151,6 @@ public final class Pomodoro {
                 }
                 promptPrinter.accept(COMMAND_PROMPT);
             }
-        } finally {
-            scanner.close();
         }
     }
 
@@ -281,13 +282,22 @@ public final class Pomodoro {
         }
     }
 
-    private static boolean isAnsiRequested(final String[] args) throws IllegalArgumentException {
-        if (args.length == 0) {
-            return false;
+    private static Map<String, Boolean> parseArgs(final String[] args) throws IllegalArgumentException {
+        final Map<String, Boolean> flags = new HashMap<>();
+        flags.put("ansi", false);
+        flags.put("bell", false);
+        for (String arg : args) {
+            switch (arg.toLowerCase()) {
+            case "-ansi":
+                flags.put("ansi", true);
+                break;
+            case "-bell":
+                flags.put("bell", true);
+                break;
+            default:
+                throw new IllegalArgumentException();
+            }
         }
-        if ("-ansi".equals(args[0])) {
-            return true;
-        }
-        throw new IllegalArgumentException();
+        return flags;
     }
 }

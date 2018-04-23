@@ -33,17 +33,19 @@ public interface TimerManager {
                 final Timer.Status status,
                 final int secondsElapsed,
                 final int timeToGo,
-                final TimeUnit timeUnit) {};
-        default void onTimerRemoved(final Timer timer) {};
-        default void onTimerSuspended(final Timer timer) {};
-        default void onTimerResumed(final Timer timer) {};
+                final TimeUnit timeUnit) {}
+
+        default void onTimerRemoved(final Timer timer) {}
+
+        default void onTimerSuspended(final Timer timer) {}
+        default void onTimerResumed(final Timer timer) {}
         default void onActivityStarted(
-                final Timer timer, final int timeToGo, final TimeUnit timeUnit) {};
-        default void onActivityEnded(final Timer timer, final int pomodoroCount) {};
+                final Timer timer, final int timeToGo, final TimeUnit timeUnit) {}
+        default void onActivityEnded(final Timer timer, final int pomodoroCount) {}
         default void onBreakStarted(
-                final Timer timer, final int timeToGo, final TimeUnit timeUnit) {};
-        default void onTimerStopped(final Timer timer, final int pomodoroCount) {};
-        default void onTimerEnded(final Timer timer, final int pomodoroCount) {};
+                final Timer timer, final int timeToGo, final TimeUnit timeUnit) {}
+        default void onTimerStopped(final Timer timer, final int pomodoroCount) {}
+        default void onTimerEnded(final Timer timer, final int pomodoroCount) {}
     }
 
     @SuppressWarnings("serial")
